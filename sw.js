@@ -1,5 +1,5 @@
 // C.A.R. – service worker. Przy każdej nowej wersji zmień numer w CACHE.
-const CACHE = 'car-2.9.0';
+const CACHE = 'car-2.12.0';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 

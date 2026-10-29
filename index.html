@@ -13,6 +13,33 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="C.A.R.">
+<script>
+// Motywy kolorystyczne: akcent i kolor nagłówka, osobno dla trybu jasnego i ciemnego
+const ACCENTS = {
+  granat: { name: 'Granat',  light: ['#1d4ed8', '#ffffff', '#e7eeff', '#0f172a'], dark: ['#5b8cff', '#06122e', '#1a2a4a', '#070d18'] },
+  zielen: { name: 'Zieleń',  light: ['#047857', '#ffffff', '#e2f3eb', '#0c2a20'], dark: ['#34d399', '#052e1f', '#12342a', '#06160f'] },
+  bordo:  { name: 'Bordo',   light: ['#9f1239', '#ffffff', '#fbe7ec', '#2a0b14'], dark: ['#fb7185', '#3b0613', '#3a1520', '#16050a'] },
+  fiolet: { name: 'Fiolet',  light: ['#6d28d9', '#ffffff', '#efe8fd', '#1e1236'], dark: ['#a78bfa', '#1e0b45', '#2a1f47', '#0f0a1c'] },
+  grafit: { name: 'Grafit',  light: ['#374151', '#ffffff', '#eceef1', '#18181b'], dark: ['#cbd5e1', '#111827', '#262b33', '#0b0b0d'] }
+};
+const darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function applyTheme(theme, accent) {
+  const root = document.documentElement;
+  if (theme === 'light' || theme === 'dark') root.dataset.theme = theme; else delete root.dataset.theme;
+  const isDark = theme === 'dark' || (theme !== 'light' && darkQuery && darkQuery.matches);
+  const a = (ACCENTS[accent] || ACCENTS.granat)[isDark ? 'dark' : 'light'];
+  root.style.setProperty('--accent', a[0]);
+  root.style.setProperty('--accent-ink', a[1]);
+  root.style.setProperty('--accent-soft', a[2]);
+  root.style.setProperty('--head', a[3]);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', a[3]);
+}
+try {
+  const saved = JSON.parse(localStorage.getItem('car.settings.v2') || '{}');
+  applyTheme(saved.theme || 'auto', saved.accent || 'granat');
+} catch (e) { applyTheme('auto', 'granat'); }
+</script>
 <style>
 :root{
   --bg:#eef2f7; --surface:#ffffff; --ink:#0f172a; --muted:#5b6b82; --line:#d9e1ec; --field:#f4f7fb;
@@ -21,12 +48,18 @@
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#0d1524; --surface:#141f33; --ink:#e5ebf4; --muted:#93a2b9; --line:#26344d; --field:#0f1929;
     --accent:#5b8cff; --accent-ink:#06122e; --accent-soft:#1a2a4a;
     --head:#070d18; --head-ink:#f1f5f9; --head-muted:#8394ad; --warn:#f0a35a;
     color-scheme:dark;
   }
+}
+:root[data-theme="dark"]{
+    --bg:#0d1524; --surface:#141f33; --ink:#e5ebf4; --muted:#93a2b9; --line:#26344d; --field:#0f1929;
+    --accent:#5b8cff; --accent-ink:#06122e; --accent-soft:#1a2a4a;
+    --head:#070d18; --head-ink:#f1f5f9; --head-muted:#8394ad; --warn:#f0a35a;
+    color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -55,6 +88,9 @@ textarea{resize:vertical}
 .row{display:grid;grid-template-columns:2fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.disc{margin-top:10px}
+.disc .hint{margin-top:4px}
+.disc .hint:empty{display:none}
 .act + .act{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .regime{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
 .regime.old{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
@@ -99,6 +135,15 @@ textarea{resize:vertical}
 .extras .qty{margin:2px 0 8px 34px}
 .qty > div.wide{flex:2;max-width:none}
 .qty select{padding:8px 10px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg button{font:inherit;font-size:14px;font-weight:600;border:0;border-radius:10px;padding:9px 4px;background:none;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:4px}
+.sw{font:inherit;font-size:12px;color:var(--ink);background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0}
+.sw i{width:40px;height:40px;border-radius:50%;display:block;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--line);overflow:hidden;position:relative}
+.sw i::after{content:"";position:absolute;inset:50% 0 0 0;background:var(--sw-head)}
+.sw[aria-pressed="true"] i{box-shadow:0 0 0 3px var(--accent)}
+.sw[aria-pressed="true"]{font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
 .chip{font:inherit;font-size:12px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
 .legend{font-size:12px;color:var(--muted);margin:8px 0 0;padding-left:18px}
@@ -140,6 +185,11 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
           <option value="1">całość</option><option value="0.5">1/2</option><option value="0.25">1/4</option><option value="0.1">1/10</option>
         </select>
       </div>
+      <div class="disc">
+        <label class="f" for="d1">Taksa po rabacie, netto (opcjonalnie)</label>
+        <input id="d1" type="text" inputmode="decimal" autocomplete="off">
+        <p class="hint" id="d1-hint"></p>
+      </div>
     </div>
     <div class="act">
       <label class="f" for="v2">Czynność 2 – wartość (opcjonalnie)</label>
@@ -149,7 +199,13 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
           <option value="1">całość</option><option value="0.5">1/2</option><option value="0.25">1/4</option><option value="0.1">1/10</option>
         </select>
       </div>
+      <div class="disc">
+        <label class="f" for="d2">Taksa po rabacie, netto (opcjonalnie)</label>
+        <input id="d2" type="text" inputmode="decimal" autocomplete="off">
+        <p class="hint" id="d2-hint"></p>
+      </div>
     </div>
+
   </div>
 
   <div class="toggles">
@@ -223,6 +279,19 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
 <!-- ================= USTAWIENIA ================= -->
 <section id="p-ustawienia" class="panel" role="tabpanel" aria-labelledby="tab-ustawienia" hidden>
   <p class="hint" style="margin:0 0 14px">Zmiany zapisują się automatycznie, tylko na tym urządzeniu. Aby przenieść je na inne urządzenie, użyj sekcji „Przenoszenie ustawień” na dole.</p>
+
+  <div class="card">
+    <h2>Wygląd</h2>
+    <label class="f" style="margin-top:12px">Tryb</label>
+    <div class="seg" id="theme-seg">
+      <button type="button" data-theme-opt="auto">Automatyczny</button>
+      <button type="button" data-theme-opt="light">Jasny</button>
+      <button type="button" data-theme-opt="dark">Ciemny</button>
+    </div>
+    <p class="hint">Automatyczny dopasowuje się do ustawień telefonu lub komputera.</p>
+    <label class="f" style="margin-top:14px">Kolor</label>
+    <div class="swatches" id="accent-sw"></div>
+  </div>
 
   <div class="card">
     <h2>Wiadomość z kalkulacją</h2>
@@ -313,7 +382,7 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
   <button class="btn danger" id="reset-all">Przywróć wszystkie ustawienia domyślne</button>
 </section>
 
-<footer>Projekt: notariusz Łukasz Kupis. Wersja 2.9</footer>
+<footer>Projekt: notariusz Łukasz Kupis. Wersja 2.12</footer>
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -393,8 +462,12 @@ function calculate(s, cfg) {
   const vat = 1 + cfg.vat / 100;
   const t1 = baseTaksa(s.v1, table, s.groupI);
   const t2 = baseTaksa(s.v2, table, s.groupI);
-  const n1 = r2(t1.value * s.m1);
-  const n2 = r2(t2.value * s.m2);
+  const max1 = r2(t1.value * s.m1);
+  const max2 = r2(t2.value * s.m2);
+  const disc1 = s.v1 > 0 && s.d1 > 0;
+  const disc2 = s.v2 > 0 && s.d2 > 0;
+  const n1 = disc1 ? r2(s.d1) : max1;
+  const n2 = disc2 ? r2(s.d2) : max2;
   const b1 = r2(n1 * vat);
   const b2 = r2(n2 * vat);
   const taksa = r2(b1 + b2);
@@ -407,7 +480,7 @@ function calculate(s, cfg) {
   const wniosek = r2(table.wniosekKW * vat);
   const reg = cfg.regFee;
   const total = r2(taksa + wypisy + pcc + court + wniosek + reg);
-  return { table, n1, n2, b1, b2, taksa, wypisy, pccBase, pccMortgage, pcc,
+  return { table, max1, max2, disc1, disc2, n1, n2, b1, b2, taksa, wypisy, pccBase, pccMortgage, pcc,
            courtMortgage, court, wniosek, reg, total,
            capped: t1.capped || t2.capped, cap: s.groupI ? table.capGroupI : table.cap };
 }
@@ -549,7 +622,8 @@ RAZEM: {razem}{podpis}`,
   otherDefCopies: 1, otherDefPages: 2,
   signature: '',
   vat: 23, pccRate: 2, pccMortgage: 19, courtMortgage: 200, regFee: 5, minWage: 4806,
-  defCourt: 200, defCopies: 6, defPages: 6
+  defCourt: 200, defCopies: 6, defPages: 6,
+  theme: 'auto', accent: 'granat'
 };
 
 const TOKENS = {
@@ -653,7 +727,9 @@ function readTaksa() {
     pcc: isOn(toggles.pcc), mortgage: isOn(toggles.hip), groupI: isOn(toggles.g1),
     copies: Math.floor(parseNum($('copies').value)),
     pages: Math.ceil(parseNum($('pages').value)),
-    court: parseNum($('court').value)
+    court: parseNum($('court').value),
+    d1: parseNum($('d1').value),
+    d2: parseNum($('d2').value)
   };
 }
 
@@ -661,8 +737,8 @@ function buildTaksaMessage(s, r) {
   const map = {
     wartosc: fmt(s.v1) + (s.v2 > 0 ? ' + ' + fmt(s.v2) : ''),
     taksa_linie: s.v2 > 0
-      ? `taksa notarialna (cz. 1): ${fmt(r.b1)}\ntaksa notarialna (cz. 2): ${fmt(r.b2)}\ntaksa razem: ${fmt(r.taksa)}`
-      : `taksa notarialna: ${fmt(r.taksa)}`,
+      ? `taksa notarialna (cz. 1${r.disc1 ? ', po rabacie' : ''}): ${fmt(r.b1)}\ntaksa notarialna (cz. 2${r.disc2 ? ', po rabacie' : ''}): ${fmt(r.b2)}\ntaksa razem: ${fmt(r.taksa)}`
+      : `taksa notarialna${r.disc1 ? ' (po rabacie)' : ''}: ${fmt(r.taksa)}`,
     taksa: fmt(r.taksa),
     wypisy: fmt(r.wypisy),
     pcc_linia: s.mortgage
@@ -694,8 +770,15 @@ function updateTaksa() {
   const reg = $('regime');
   reg.textContent = r.table.label;
   reg.classList.toggle('old', r.table.id !== RATE_TABLES[RATE_TABLES.length - 1].id);
-  $('capnote').textContent = r.capped
-    ? `Zastosowano limit taksy ${fmt(r.cap)} netto${s.groupI ? ' (I grupa podatkowa)' : ''}.` : '';
+  const notes = [];
+  [[1, r.max1, r.disc1, s.d1, s.v1], [2, r.max2, r.disc2, s.d2, s.v2]].forEach(([i, max, disc, d, v]) => {
+    $('d' + i).placeholder = v > 0 ? 'maks. ' + fmtNum.format(max) : '';
+    $('d' + i + '-hint').textContent = disc ? `Zamiast stawki maksymalnej ${fmt(max)} netto.` : '';
+    if (disc && d > max + 0.004) notes.push(`Taksa po rabacie (cz. ${i}) przekracza stawkę maksymalną ${fmt(max)} netto.`);
+  });
+  if (r.capped && !(r.disc1 && (r.disc2 || !(s.v2 > 0))))
+    notes.push(`Zastosowano limit taksy ${fmt(r.cap)} netto${s.groupI ? ' (I grupa podatkowa)' : ''}.`);
+  $('capnote').textContent = notes.join(' ');
   $('pcc-label').textContent = 'PCC ' + String(settings.pccRate).replace('.', ',') + '%';
   $('msg-taksa').value = buildTaksaMessage(s, r);
 }
@@ -1015,6 +1098,7 @@ function updateOther() {
 }
 
 function refreshAll() {
+  if (typeof refreshAppearance === 'function') refreshAppearance();
   fillSettingsForm(); renderDocs(); renderOther(); updateTaksa(); updateDocs(); updateOther();
 }
 
@@ -1102,6 +1186,36 @@ function initSettings() {
   });
 }
 
+// ---------- Wygląd ----------
+function refreshAppearance() {
+  if (!['auto', 'light', 'dark'].includes(settings.theme)) settings.theme = 'auto';
+  if (!ACCENTS[settings.accent]) settings.accent = 'granat';
+  applyTheme(settings.theme, settings.accent);
+  document.querySelectorAll('[data-theme-opt]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeOpt === settings.theme)));
+  document.querySelectorAll('[data-accent-opt]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.accentOpt === settings.accent)));
+}
+function initAppearance() {
+  const box = $('accent-sw');
+  Object.entries(ACCENTS).forEach(([id, a]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw'; b.dataset.accentOpt = id;
+    const dot = document.createElement('i');
+    dot.style.background = a.light[0];
+    dot.style.setProperty('--sw-head', a.light[3]);
+    b.append(dot, a.name);
+    b.addEventListener('click', () => { settings.accent = id; saveSettings(); refreshAppearance(); });
+    box.appendChild(b);
+  });
+  document.querySelectorAll('[data-theme-opt]').forEach(b => b.addEventListener('click', () => {
+    settings.theme = b.dataset.themeOpt; saveSettings(); refreshAppearance();
+  }));
+  if (darkQuery) {
+    const onChange = () => { if (settings.theme === 'auto') refreshAppearance(); };
+    darkQuery.addEventListener ? darkQuery.addEventListener('change', onChange) : darkQuery.addListener(onChange);
+  }
+  refreshAppearance();
+}
+
 // ---------- Start ----------
 function init() {
   // zakładki
@@ -1124,7 +1238,7 @@ function init() {
   $('pages').value = settings.defPages;
   $('court').value = settings.defCourt;
   $('clear-other').addEventListener('click', () => { otherSel.clear(); renderOther(); updateOther(); });
-  ['date', 'v1', 'm1', 'v2', 'm2', 'copies', 'pages', 'court'].forEach(id => $(id).addEventListener('input', updateTaksa));
+  ['date', 'v1', 'm1', 'd1', 'v2', 'm2', 'd2', 'copies', 'pages', 'court'].forEach(id => $(id).addEventListener('input', updateTaksa));
   Object.values(toggles).forEach(el => el.addEventListener('click', () => {
     el.setAttribute('aria-pressed', String(!isOn(el)));
     updateTaksa();
@@ -1134,6 +1248,7 @@ function init() {
   document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', () => copyText($(btn.dataset.copy).value)));
 
   initSettings();
+  initAppearance();
   renderDocs();
   renderOther();
   updateTaksa();
