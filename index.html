@@ -64,8 +64,24 @@ try {
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-tap-highlight-color:transparent}
-header{position:sticky;top:0;z-index:10;background:var(--head);color:var(--head-ink);padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0}
-.brand{max-width:640px;margin:0 auto;display:flex;align-items:baseline;gap:10px}
+header{position:sticky;top:0;z-index:10;overflow:hidden;background:var(--head);color:var(--head-ink);padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0}
+.brand{max-width:640px;margin:0 auto;display:flex;align-items:baseline;gap:10px;position:relative;z-index:1}
+nav{position:relative;z-index:1}
+.brand h1{position:relative}
+.brand .greet{color:#f2c14e;font-weight:600}
+.festive{position:absolute;inset:0;pointer-events:none;z-index:0}
+.festive[hidden]{display:none}
+.festive .art{position:absolute;top:calc(env(safe-area-inset-top,0px) + 4px);right:max(12px, calc((100% - 640px) / 2));width:128px;height:46px}
+.festive .art svg{width:100%;height:100%;display:block;overflow:visible}
+.hat{position:absolute;left:-11px;top:-13px;width:27px;height:22px;transform:rotate(-14deg);pointer-events:none}
+.hat svg{width:100%;height:100%;display:block}
+.flake{position:absolute;top:-8px;border-radius:50%;background:#fff;opacity:.75;animation:fall linear infinite}
+@keyframes fall{to{transform:translate(var(--drift),110px)}}
+.fw{animation:pop 2.8s ease-out infinite;transform-box:view-box}
+.fw.f2{animation-delay:.9s}.fw.f3{animation-delay:1.7s}
+@keyframes pop{0%{transform:scale(.35);opacity:0}15%{opacity:1}55%{transform:scale(1);opacity:1}100%{transform:scale(1.08);opacity:0}}
+@media (max-width:400px){.festive .art{width:104px;height:38px}}
+@media (prefers-reduced-motion:reduce){.flake{animation:none;top:auto}.fw{animation:none}}
 .brand h1{margin:0;font-size:22px;font-weight:900;font-style:italic;letter-spacing:-.02em}
 .brand span{font-size:13px;color:var(--head-muted)}
 nav{max-width:640px;margin:8px auto 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -145,6 +161,7 @@ textarea{resize:vertical}
 .sw[aria-pressed="true"] i{box-shadow:0 0 0 3px var(--accent)}
 .sw[aria-pressed="true"]{font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .chip{font:inherit;font-size:12px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
 .legend{font-size:12px;color:var(--muted);margin:8px 0 0;padding-left:18px}
 .legend li{margin:2px 0}
@@ -158,7 +175,8 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
 </head>
 <body>
 <header>
-  <div class="brand"><h1>C.A.R.</h1><span>Cyfrowy Asystent Rejenta</span></div>
+  <div class="festive" id="festive" aria-hidden="true" hidden></div>
+  <div class="brand"><h1 id="logo">C.A.R.</h1><span id="subtitle">Cyfrowy Asystent Rejenta</span></div>
   <nav role="tablist" aria-label="Sekcje">
     <button role="tab" id="tab-taksa" data-tab="taksa" aria-controls="p-taksa" aria-selected="true">Taksa</button>
     <button role="tab" id="tab-dokumenty" data-tab="dokumenty" aria-controls="p-dokumenty" aria-selected="false">Dokumenty</button>
@@ -170,12 +188,6 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
 <main>
 <!-- ================= TAKSA ================= -->
 <section id="p-taksa" class="panel" role="tabpanel" aria-labelledby="tab-taksa">
-  <div class="card">
-    <label class="f" for="date">Data czynności</label>
-    <input id="date" type="date">
-    <span id="regime" class="regime"></span>
-  </div>
-
   <div class="card">
     <div class="act">
       <label class="f" for="v1">Czynność 1 – wartość przedmiotu (zł)</label>
@@ -218,7 +230,7 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
     <div class="row3">
       <div><label class="f" for="copies">Wypisów</label><input id="copies" type="number" inputmode="numeric" min="0"></div>
       <div><label class="f" for="pages">Stron wypisu</label><input id="pages" type="number" inputmode="numeric" min="0"></div>
-      <div><label class="f" for="court">Opłata sądowa</label><input id="court" type="number" inputmode="decimal" min="0"></div>
+      <div><label class="f" for="court">Opłata sądowa</label><input id="court" type="text" inputmode="decimal" autocomplete="off"></div>
     </div>
   </div>
 
@@ -258,8 +270,7 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
 <!-- ================= INNE CZYNNOŚCI ================= -->
 <section id="p-inne" class="panel" role="tabpanel" aria-labelledby="tab-inne" hidden>
   <div class="card">
-    <span class="regime" style="margin-top:0">Stawki od 5 listopada 2026 r.</span>
-    <p class="hint">Czynności bez wartości przedmiotu. Kwoty na liście są netto. Po zaznaczeniu czynności ustawisz liczbę wypisów i stron. Umowy z wartością policzysz w zakładce Taksa.</p>
+    <p class="hint" style="margin:0">Czynności bez wartości przedmiotu. Kwoty na liście są netto. Po zaznaczeniu czynności ustawisz liczbę wypisów i stron. Umowy z wartością policzysz w zakładce Taksa.</p>
   </div>
   <div id="other"></div>
   <div class="total" aria-live="polite">
@@ -291,6 +302,14 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
     <p class="hint">Automatyczny dopasowuje się do ustawień telefonu lub komputera.</p>
     <label class="f" style="margin-top:14px">Kolor</label>
     <div class="swatches" id="accent-sw"></div>
+    <label class="f" style="margin-top:16px">Nagłówki okolicznościowe</label>
+    <div class="seg" id="festive-seg" style="grid-template-columns:1fr 1fr">
+      <button type="button" data-fest="on">Włączone</button>
+      <button type="button" data-fest="off">Wyłączone</button>
+    </div>
+    <p class="hint" id="festive-dates"></p>
+    <p class="hint" style="margin-top:10px">Podejrzyj teraz (dotknij ponownie, aby wyłączyć podgląd):</p>
+    <div class="chips" id="festive-prev"></div>
   </div>
 
   <div class="card">
@@ -382,7 +401,7 @@ footer{text-align:center;font-size:12px;color:var(--muted);padding:8px 0 0}
   <button class="btn danger" id="reset-all">Przywróć wszystkie ustawienia domyślne</button>
 </section>
 
-<footer>Projekt: notariusz Łukasz Kupis. Wersja 2.12</footer>
+<footer>Projekt: notariusz Łukasz Kupis. Wersja 2.15</footer>
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -403,16 +422,6 @@ const COMMON_BRACKETS = [
 ];
 
 const RATE_TABLES = [
-  {
-    id: '2004', from: '0000-01-01',
-    label: 'Stawki sprzed 5 listopada 2026 r.',
-    brackets: COMMON_BRACKETS.concat([
-      { upTo: Infinity, base: 6770, over: 2000000, rate: 0.0025 }
-    ]),
-    cap: 10000, capGroupI: 7500,
-    wypisTiers: [{ upTo: Infinity, price: 6 }],
-    wniosekKW: 200
-  },
   {
     id: '2026', from: '2026-11-05',
     label: 'Stawki od 5 listopada 2026 r.',
@@ -623,7 +632,7 @@ RAZEM: {razem}{podpis}`,
   signature: '',
   vat: 23, pccRate: 2, pccMortgage: 19, courtMortgage: 200, regFee: 5, minWage: 4806,
   defCourt: 200, defCopies: 6, defPages: 6,
-  theme: 'auto', accent: 'granat'
+  theme: 'auto', accent: 'granat', festive: true
 };
 
 const TOKENS = {
@@ -638,7 +647,7 @@ const TOKENS = {
     ['oplata_rej', 'opłata rejestracyjna'],
     ['razem', 'suma brutto'],
     ['uwaga_pcc', 'uwaga o zwolnieniu z PCC (gdy dotyczy)'],
-    ['data', 'data czynności'],
+    ['data', 'dzisiejsza data'],
     ['podpis', 'podpis z ustawień']
   ],
   other: [
@@ -659,7 +668,35 @@ const TOKENS = {
 // ---------- Pomocnicze ----------
 const $ = id => document.getElementById(id);
 const fmtNum = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmt = n => fmtNum.format(n) + ' zł';
+const groupNum = n => {
+  const [i, d] = (Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2).split('.');
+  return i.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + ',' + d;
+};
+const fmt = n => groupNum(n) + '\u00a0zł';
+
+// Pole kwoty: spacje co trzy cyfry, grosze po przecinku (kropka też działa jak przecinek)
+function formatMoneyInput(el) {
+  const raw = el.value;
+  const caret = el.selectionStart == null ? raw.length : el.selectionStart;
+  const clean = str => str.replace(/[^\d,.]/g, '').replace(/\./g, ',');
+  const v = clean(raw);
+  const ci = v.indexOf(',');
+  let intp = (ci < 0 ? v : v.slice(0, ci)).replace(/^0+(?=\d)/, '');
+  const dec = ci < 0 ? null : v.slice(ci + 1).replace(/,/g, '').slice(0, 2);
+  if (ci === 0) intp = '0';
+  const out = intp.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + (dec === null ? '' : ',' + dec);
+  if (out === raw) return;
+  const before = clean(raw.slice(0, caret));
+  let want = (before.match(/\d/g) || []).length + (before.includes(',') ? 1 : 0);
+  let pos = 0;
+  while (pos < out.length && want > 0) { if (/[\d,]/.test(out[pos])) want--; pos++; }
+  el.value = out;
+  try { el.setSelectionRange(pos, pos); } catch (e) { /* pole bez kursora */ }
+}
+function moneyField(el) {
+  el.addEventListener('input', () => formatMoneyInput(el));
+  if (el.value) formatMoneyInput(el);
+}
 const parseNum = str => {
   const n = Number(String(str).replace(/\s|\u00a0/g, '').replace(',', '.'));
   return isFinite(n) && n > 0 ? n : 0;
@@ -721,7 +758,7 @@ const isOn = el => el.getAttribute('aria-pressed') === 'true';
 
 function readTaksa() {
   return {
-    date: $('date').value || todayISO(),
+    date: todayISO(),
     v1: parseNum($('v1').value), m1: Number($('m1').value),
     v2: parseNum($('v2').value), m2: Number($('m2').value),
     pcc: isOn(toggles.pcc), mortgage: isOn(toggles.hip), groupI: isOn(toggles.g1),
@@ -767,12 +804,9 @@ function updateTaksa() {
   $('o-sad').textContent = fmt(r.court);
   $('o-kw').textContent = fmt(r.wniosek);
   $('o-rej').textContent = fmt(r.reg);
-  const reg = $('regime');
-  reg.textContent = r.table.label;
-  reg.classList.toggle('old', r.table.id !== RATE_TABLES[RATE_TABLES.length - 1].id);
   const notes = [];
   [[1, r.max1, r.disc1, s.d1, s.v1], [2, r.max2, r.disc2, s.d2, s.v2]].forEach(([i, max, disc, d, v]) => {
-    $('d' + i).placeholder = v > 0 ? 'maks. ' + fmtNum.format(max) : '';
+    $('d' + i).placeholder = v > 0 ? 'maks. ' + groupNum(max) : '';
     $('d' + i + '-hint').textContent = disc ? `Zamiast stawki maksymalnej ${fmt(max)} netto.` : '';
     if (disc && d > max + 0.004) notes.push(`Taksa po rabacie (cz. ${i}) przekracza stawkę maksymalną ${fmt(max)} netto.`);
   });
@@ -930,7 +964,7 @@ function renderOther() {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = otherSel.has(key);
       const name = document.createElement('span'); name.className = 'name'; name.textContent = it.name;
       const amt = document.createElement('span'); amt.className = 'amt';
-      amt.textContent = it.type === 'strony' ? '12/10/8 zł za str.' : fmt(itemAmount(it)).replace(',00 zł', ' zł');
+      amt.textContent = it.type === 'strony' ? '12/10/8 zł za str.' : fmt(itemAmount(it)).replace(/,00(\s)zł/, '$1zł');
       if (it.frac) {
         const sub = document.createElement('small');
         sub.textContent = it.fracLabel + ' min. wyn.';
@@ -960,7 +994,7 @@ function renderOther() {
         extras = document.createElement('div'); extras.className = 'extras'; extras.hidden = !cb.checked;
         if (it.fees && it.fees.length) {
           const info = document.createElement('p'); info.className = 'hint'; info.style.margin = '0 0 4px';
-          info.textContent = 'Opłaty sądowe: ' + it.fees.map(f => `${f.label} ${fmt(f.amount).replace(',00 zł', ' zł')}`).join(', ') + '.';
+          info.textContent = 'Opłaty sądowe: ' + it.fees.map(f => `${f.label} ${fmt(f.amount).replace(/,00(\s)zł/, '$1zł')}`).join(', ') + '.';
           extras.append(info);
         }
         const prev = otherSel.get(key);
@@ -974,7 +1008,7 @@ function renderOther() {
         };
         (it.opts || []).forEach((o, oi) => {
           if (o.court) return;
-          const [l, c] = mk(o.court ? `Opłata sądowa – ${o.label.charAt(0).toLowerCase() + o.label.slice(1)} (+${fmt(o.amount).replace(',00 zł', ' zł')})` : `${o.label} (+${fmt(o.amount).replace(',00 zł', ' zł')} netto)`, !!(prev && prev.opts && prev.opts.has(oi)),
+          const [l, c] = mk(o.court ? `Opłata sądowa – ${o.label.charAt(0).toLowerCase() + o.label.slice(1)} (+${fmt(o.amount).replace(/,00(\s)zł/, '$1zł')})` : `${o.label} (+${fmt(o.amount).replace(/,00(\s)zł/, '$1zł')} netto)`, !!(prev && prev.opts && prev.opts.has(oi)),
             v => { v ? st().opts.add(oi) : st().opts.delete(oi); updateOther(); });
           optBoxes.push(c); extras.append(l);
         });
@@ -984,7 +1018,7 @@ function renderOther() {
         }
         (it.opts || []).forEach((o, oi) => {
           if (!o.court) return;
-          const [l, c] = mk(o.court ? `Opłata sądowa – ${o.label.charAt(0).toLowerCase() + o.label.slice(1)} (+${fmt(o.amount).replace(',00 zł', ' zł')})` : `${o.label} (+${fmt(o.amount).replace(',00 zł', ' zł')} netto)`, !!(prev && prev.opts && prev.opts.has(oi)),
+          const [l, c] = mk(o.court ? `Opłata sądowa – ${o.label.charAt(0).toLowerCase() + o.label.slice(1)} (+${fmt(o.amount).replace(/,00(\s)zł/, '$1zł')})` : `${o.label} (+${fmt(o.amount).replace(/,00(\s)zł/, '$1zł')} netto)`, !!(prev && prev.opts && prev.opts.has(oi)),
             v => { v ? st().opts.add(oi) : st().opts.delete(oi); updateOther(); });
           optBoxes.push(c); extras.append(l);
         });
@@ -993,8 +1027,8 @@ function renderOther() {
           const w1 = document.createElement('div'); w1.className = 'wide';
           const l1 = document.createElement('label'); l1.htmlFor = 'oh-v' + n; l1.textContent = 'Kwota hipoteki (zł)';
           hipVal = document.createElement('input'); hipVal.id = 'oh-v' + n; hipVal.type = 'text'; hipVal.inputMode = 'decimal';
-          hipVal.placeholder = '0'; hipVal.value = prev && prev.hipV ? String(prev.hipV) : '';
-          hipVal.addEventListener('input', () => { st().hipV = parseNum(hipVal.value); updateOther(); });
+          hipVal.placeholder = '0'; hipVal.value = prev && prev.hipV ? groupNum(prev.hipV).replace(/\u00a0/g, ' ').replace(/,00$/, '') : '';
+          hipVal.addEventListener('input', () => { formatMoneyInput(hipVal); st().hipV = parseNum(hipVal.value); updateOther(); });
           w1.append(l1, hipVal);
           const w2 = document.createElement('div');
           const l2 = document.createElement('label'); l2.htmlFor = 'oh-m' + n; l2.textContent = 'Stawka';
@@ -1099,6 +1133,7 @@ function updateOther() {
 
 function refreshAll() {
   if (typeof refreshAppearance === 'function') refreshAppearance();
+  if (typeof applyFestive === 'function') applyFestive();
   fillSettingsForm(); renderDocs(); renderOther(); updateTaksa(); updateDocs(); updateOther();
 }
 
@@ -1164,7 +1199,7 @@ function initSettings() {
   // informacja o stawkach
   $('rates-info').textContent = RATE_TABLES.map(t =>
     `${t.label}: limit ${fmt(t.cap)} netto (I grupa ${fmt(t.capGroupI)}), wniosek KW ${fmt(t.wniosekKW)} netto.`
-  ).join(' ') + ' Tabela stawek jest dobierana automatycznie według daty czynności.';
+  ).join(' ') + ' Rozporządzenie MS w brzmieniu od 5.11.2026 r. (Dz.U. 2026 poz. 1370).';
   // przenoszenie
   $('export-btn').addEventListener('click', () => copyText(JSON.stringify({ app: 'CAR', v: 2, settings }), 'Skopiowano kod ustawień'));
   $('import-btn').addEventListener('click', () => {
@@ -1184,6 +1219,91 @@ function initSettings() {
     saveSettings(); refreshAll();
     toast('Przywrócono ustawienia domyślne');
   });
+}
+
+// ---------- Nagłówki okolicznościowe ----------
+const FESTIVE_ART = {"mikolajki": "<svg viewBox=\"0 0 128 46\"><rect x=\"70\" y=\"19\" width=\"26\" height=\"25\" rx=\"2\" fill=\"#d9434f\"/><rect x=\"68\" y=\"14\" width=\"30\" height=\"7\" rx=\"1.5\" fill=\"#e8606a\"/><rect x=\"81\" y=\"14\" width=\"4\" height=\"30\" fill=\"#f2c14e\"/><path d=\"M83 14c-3-6-11-6-8-1c1 2 5 2 8 1zM83 14c3-6 11-6 8-1c-1 2-5 2-8 1z\" fill=\"none\" stroke=\"#f2c14e\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/><rect x=\"101\" y=\"27\" width=\"20\" height=\"17\" rx=\"2\" fill=\"#f1f5f9\"/><rect x=\"99\" y=\"22\" width=\"24\" height=\"7\" rx=\"1.5\" fill=\"#ffffff\"/><rect x=\"109\" y=\"22\" width=\"4\" height=\"22\" fill=\"#d9434f\"/><path d=\"M111 22c-3-6-11-6-8-1c1 2 5 2 8 1zM111 22c3-6 11-6 8-1c-1 2-5 2-8 1z\" fill=\"none\" stroke=\"#d9434f\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/></svg>", "swieta": "<svg viewBox=\"0 0 128 46\"><g stroke=\"#3e9d6a\" stroke-width=\"1.6\" stroke-linecap=\"round\" fill=\"none\"><path d=\"M47 7.6l-4 7\" /><path d=\"M47 7.6l-4 -6\" /><path d=\"M50 7.1l-4 7\" /><path d=\"M50 7.1l-4 -6\" /><path d=\"M53 6.7l-4 7\" /><path d=\"M53 6.7l-4 -6\" /><path d=\"M56 6.3l-4 7\" /><path d=\"M56 6.3l-4 -6\" /><path d=\"M59 5.9l-4 7\" /><path d=\"M59 5.9l-4 -6\" /><path d=\"M62 5.5l-4 7\" /><path d=\"M62 5.5l-4 -6\" /><path d=\"M65 5.1l-4 7\" /><path d=\"M65 5.1l-4 -6\" /><path d=\"M68 4.8l-4 7\" /><path d=\"M68 4.8l-4 -6\" /><path d=\"M71 4.5l-4 7\" /><path d=\"M71 4.5l-4 -6\" /><path d=\"M74 4.2l-4 7\" /><path d=\"M74 4.2l-4 -6\" /><path d=\"M77 4l-4 7\" /><path d=\"M77 4l-4 -6\" /><path d=\"M80 3.8l-4 7\" /><path d=\"M80 3.8l-4 -6\" /><path d=\"M83 3.6l-4 7\" /><path d=\"M83 3.6l-4 -6\" /><path d=\"M86 3.5l-4 7\" /><path d=\"M86 3.5l-4 -6\" /><path d=\"M89 3.4l-4 7\" /><path d=\"M89 3.4l-4 -6\" /><path d=\"M92 3.4l-4 7\" /><path d=\"M92 3.4l-4 -6\" /><path d=\"M95 3.3l-4 7\" /><path d=\"M95 3.3l-4 -6\" /><path d=\"M98 3.4l-4 7\" /><path d=\"M98 3.4l-4 -6\" /><path d=\"M101 3.4l-4 7\" /><path d=\"M101 3.4l-4 -6\" /><path d=\"M104 3.5l-4 7\" /><path d=\"M104 3.5l-4 -6\" /><path d=\"M107 3.6l-4 7\" /><path d=\"M107 3.6l-4 -6\" /><path d=\"M110 3.8l-4 7\" /><path d=\"M110 3.8l-4 -6\" /><path d=\"M113 3.9l-4 7\" /><path d=\"M113 3.9l-4 -6\" /><path d=\"M116 4.1l-4 7\" /><path d=\"M116 4.1l-4 -6\" /><path d=\"M119 4.3l-4 7\" /><path d=\"M119 4.3l-4 -6\" /><path d=\"M122 4.5l-4 7\" /><path d=\"M122 4.5l-4 -6\" /><path d=\"M125 4.8l-4 7\" /><path d=\"M125 4.8l-4 -6\" /></g><path d=\"M44 8 L47 7.6 L50 7.1 L53 6.7 L56 6.3 L59 5.9 L62 5.5 L65 5.1 L68 4.8 L71 4.5 L74 4.2 L77 4 L80 3.8 L83 3.6 L86 3.5 L89 3.4 L92 3.4 L95 3.3 L98 3.4 L101 3.4 L104 3.5 L107 3.6 L110 3.8 L113 3.9 L116 4.1 L119 4.3 L122 4.5 L125 4.8 L128 5\" stroke=\"#2b7a50\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M62 8v8\" stroke=\"#f2c14e\" stroke-width=\"1\" opacity=\".8\"/><rect x=\"60\" y=\"15\" width=\"4\" height=\"3\" rx=\"1\" fill=\"#f2c14e\"/><circle cx=\"62\" cy=\"23.5\" r=\"5.5\" fill=\"#d9434f\"/><path d=\"M59.525 21.3a3.0250000000000004 3.0250000000000004 0 0 1 2.75 -2.75\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"1.4\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M84 6v16\" stroke=\"#f2c14e\" stroke-width=\"1\" opacity=\".8\"/><rect x=\"82\" y=\"21\" width=\"4\" height=\"3\" rx=\"1\" fill=\"#f2c14e\"/><circle cx=\"84\" cy=\"30.5\" r=\"6.5\" fill=\"#f2c14e\"/><path d=\"M81.075 27.9a3.575 3.575 0 0 1 3.25 -3.25\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"1.4\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M106 5v7\" stroke=\"#f2c14e\" stroke-width=\"1\" opacity=\".8\"/><rect x=\"104\" y=\"11\" width=\"4\" height=\"3\" rx=\"1\" fill=\"#f2c14e\"/><circle cx=\"106\" cy=\"19\" r=\"5\" fill=\"#f1f5f9\"/><path d=\"M103.75 17.0a2.75 2.75 0 0 1 2.5 -2.5\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"1.4\" fill=\"none\" stroke-linecap=\"round\"/><polygon points=\"120,23.5 121.6,27.7 126.2,28 122.7,30.9 123.8,35.3 120,32.8 116.2,35.3 117.3,30.9 113.8,28 118.4,27.7\" fill=\"#f2c14e\"/></svg>", "nowyrok": "<svg viewBox=\"0 0 128 46\"><g class=\"fw f1\" style=\"transform-origin:66px 24px\"><path d=\"M70.2 24L78 24\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"81\" cy=\"24\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M69.6 26.1L76.4 30\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"79\" cy=\"31.5\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M68.1 27.6L72 34.4\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"73.5\" cy=\"37\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M66 28.2L66 36\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"66\" cy=\"39\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M63.9 27.6L60 34.4\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"58.5\" cy=\"37\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M62.4 26.1L55.6 30\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"53\" cy=\"31.5\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M61.8 24L54 24\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"51\" cy=\"24\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M62.4 21.9L55.6 18\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"53\" cy=\"16.5\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M63.9 20.4L60 13.6\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"58.5\" cy=\"11\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M66 19.8L66 12\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"66\" cy=\"9\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M68.1 20.4L72 13.6\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"73.5\" cy=\"11\" r=\"1.2\" fill=\"#f2c14e\"/><path d=\"M69.6 21.9L76.4 18\" stroke=\"#f2c14e\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"79\" cy=\"16.5\" r=\"1.2\" fill=\"#f2c14e\"/></g><g class=\"fw f2\" style=\"transform-origin:96px 15px\"><path d=\"M99.5 15L106 15\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"109\" cy=\"15\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M98.8 17.1L104.1 20.9\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"106.5\" cy=\"22.6\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M97.1 18.3L99.1 24.5\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"100\" cy=\"27.4\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M94.9 18.3L92.9 24.5\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"92\" cy=\"27.4\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M93.2 17.1L87.9 20.9\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"85.5\" cy=\"22.6\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M92.5 15L86 15\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"83\" cy=\"15\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M93.2 12.9L87.9 9.1\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"85.5\" cy=\"7.4\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M94.9 11.7L92.9 5.5\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"92\" cy=\"2.6\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M97.1 11.7L99.1 5.5\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"100\" cy=\"2.6\" r=\"1.2\" fill=\"#f28b9a\"/><path d=\"M98.8 12.9L104.1 9.1\" stroke=\"#f28b9a\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"106.5\" cy=\"7.4\" r=\"1.2\" fill=\"#f28b9a\"/></g><g class=\"fw f3\" style=\"transform-origin:116px 30px\"><path d=\"M118.8 30L124 30\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"127\" cy=\"30\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M118.1 31.8L122.1 35.1\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"124.4\" cy=\"37.1\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M116.5 32.8L117.4 37.9\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"117.9\" cy=\"40.8\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M114.6 32.4L112 36.9\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"110.5\" cy=\"39.5\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M113.4 31L108.5 32.7\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"105.7\" cy=\"33.8\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M113.4 29L108.5 27.3\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"105.7\" cy=\"26.2\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M114.6 27.6L112 23.1\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"110.5\" cy=\"20.5\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M116.5 27.2L117.4 22.1\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"117.9\" cy=\"19.2\" r=\"1.2\" fill=\"#f1f5f9\"/><path d=\"M118.1 28.2L122.1 24.9\" stroke=\"#f1f5f9\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><circle cx=\"124.4\" cy=\"22.9\" r=\"1.2\" fill=\"#f1f5f9\"/></g></svg>", "rocznica": "<svg viewBox=\"0 0 128 46\"><path d=\"M84 36Q62 34 54 8\" stroke=\"#f2c14e\" stroke-width=\"1.3\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"75.1\" cy=\"36.9\" rx=\"4.3\" ry=\"1.6\" transform=\"rotate(-204 75.1 36.9)\" fill=\"#f2c14e\"/><ellipse cx=\"76.3\" cy=\"31.9\" rx=\"4.3\" ry=\"1.6\" transform=\"rotate(-128 76.3 31.9)\" fill=\"#f2c14e\"/><ellipse cx=\"69.7\" cy=\"34.5\" rx=\"4.1\" ry=\"1.6\" transform=\"rotate(-194 69.7 34.5)\" fill=\"#f2c14e\"/><ellipse cx=\"71.8\" cy=\"29.8\" rx=\"4.1\" ry=\"1.6\" transform=\"rotate(-118 71.8 29.8)\" fill=\"#f2c14e\"/><ellipse cx=\"64.9\" cy=\"31.1\" rx=\"4.0\" ry=\"1.5\" transform=\"rotate(-184 64.9 31.1)\" fill=\"#f2c14e\"/><ellipse cx=\"67.8\" cy=\"26.9\" rx=\"4.0\" ry=\"1.5\" transform=\"rotate(-108 67.8 26.9)\" fill=\"#f2c14e\"/><ellipse cx=\"60.7\" cy=\"27.0\" rx=\"3.8\" ry=\"1.5\" transform=\"rotate(-173 60.7 27.0)\" fill=\"#f2c14e\"/><ellipse cx=\"64.4\" cy=\"23.3\" rx=\"3.8\" ry=\"1.5\" transform=\"rotate(-97 64.4 23.3)\" fill=\"#f2c14e\"/><ellipse cx=\"57.2\" cy=\"22.0\" rx=\"3.7\" ry=\"1.4\" transform=\"rotate(-164 57.2 22.0)\" fill=\"#f2c14e\"/><ellipse cx=\"61.4\" cy=\"18.9\" rx=\"3.7\" ry=\"1.4\" transform=\"rotate(-88 61.4 18.9)\" fill=\"#f2c14e\"/><ellipse cx=\"54.2\" cy=\"16.3\" rx=\"3.5\" ry=\"1.4\" transform=\"rotate(-156 54.2 16.3)\" fill=\"#f2c14e\"/><ellipse cx=\"58.8\" cy=\"13.9\" rx=\"3.5\" ry=\"1.4\" transform=\"rotate(-80 58.8 13.9)\" fill=\"#f2c14e\"/><ellipse cx=\"51.8\" cy=\"9.8\" rx=\"3.4\" ry=\"1.3\" transform=\"rotate(-149 51.8 9.8)\" fill=\"#f2c14e\"/><ellipse cx=\"56.6\" cy=\"8.0\" rx=\"3.4\" ry=\"1.3\" transform=\"rotate(-73 56.6 8.0)\" fill=\"#f2c14e\"/><ellipse cx=\"53.0\" cy=\"5.0\" rx=\"3.3\" ry=\"1.4\" transform=\"rotate(-107 53.0 5.0)\" fill=\"#f2c14e\"/><path d=\"M91 34l-5 11 5-2 3 4 3-11zM109 34l5 11-5-2-3 4-3-11z\" fill=\"#8e1d2c\"/><polygon points=\"115.5,23 113.6,27 113,31.4 109.3,33.7 106.4,37.1 102,37.1 97.8,38.3 94.1,35.9 89.8,34.7 88.1,30.7 85.1,27.4 85.8,23 85.1,18.6 88.1,15.3 89.8,11.3 94.1,10.1 97.8,7.7 102,8.9 106.4,8.9 109.3,12.3 113,14.6 113.6,19\" fill=\"#b42a3b\"/><circle cx=\"100\" cy=\"23\" r=\"10.5\" fill=\"none\" stroke=\"#e8a1ab\" stroke-opacity=\".7\" stroke-width=\"1\"/><g fill=\"none\" stroke=\"#f6d3d8\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M103.1 16.4C102.5 15 101.3 14.3 99.9 14.3C98.1 14.3 96.8 15.4 96.8 16.8C96.8 18.3 98 19.1 99.6 19.8\"/><path d=\"M100 25.9C97.1 24.1 96.2 22.4 96.5 21.2C96.8 19.9 98.4 19.4 100 20.8C101.6 19.4 103.2 19.9 103.5 21.2C103.8 22.4 102.9 24.1 100 25.9Z\"/><path d=\"M100.4 26.2C102 26.9 103.2 27.7 103.2 29.2C103.2 30.6 101.9 31.7 100.1 31.7C98.7 31.7 97.5 31 96.9 29.6\"/></g></svg>", "wielkanoc": "<svg viewBox=\"0 0 128 46\"><path d=\"M44 40Q60 30 74 8\" stroke=\"#8a6a4f\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"52\" cy=\"33\" rx=\"3.6\" ry=\"2.3\" transform=\"rotate(-60 52 33)\" fill=\"#e6e8ec\"/><ellipse cx=\"58\" cy=\"27\" rx=\"3.6\" ry=\"2.3\" transform=\"rotate(-20 58 27)\" fill=\"#e6e8ec\"/><ellipse cx=\"63\" cy=\"22\" rx=\"3.6\" ry=\"2.3\" transform=\"rotate(-70 63 22)\" fill=\"#e6e8ec\"/><ellipse cx=\"67\" cy=\"16\" rx=\"3.6\" ry=\"2.3\" transform=\"rotate(-25 67 16)\" fill=\"#e6e8ec\"/><ellipse cx=\"71\" cy=\"11\" rx=\"3.6\" ry=\"2.3\" transform=\"rotate(-65 71 11)\" fill=\"#e6e8ec\"/><clipPath id=\"e87\"><ellipse cx=\"87\" cy=\"29\" rx=\"9\" ry=\"12\"/></clipPath><ellipse cx=\"87\" cy=\"29\" rx=\"9\" ry=\"12\" fill=\"#d9434f\"/><g clip-path=\"url(#e87)\" stroke=\"#f1f5f9\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M78 24 L81 30 L84 24 L87 30 L90 24 L93 30 L96 24 L99 30\"/><path d=\"M78 36h18M78 20h18\"/></g><clipPath id=\"e104\"><ellipse cx=\"104\" cy=\"30\" rx=\"8.5\" ry=\"11.5\"/></clipPath><ellipse cx=\"104\" cy=\"30\" rx=\"8.5\" ry=\"11.5\" fill=\"#f2c14e\"/><g clip-path=\"url(#e104)\" stroke=\"#d9434f\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"100\" cy=\"24\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><circle cx=\"107\" cy=\"27\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><circle cx=\"101\" cy=\"32\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><circle cx=\"108\" cy=\"35\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><circle cx=\"104\" cy=\"40\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><circle cx=\"104\" cy=\"19\" r=\"1.3\" fill=\"#d9434f\" stroke=\"none\"/><path d=\"M95.5 30h17.0\"/></g><clipPath id=\"e119\"><ellipse cx=\"119\" cy=\"31\" rx=\"7.5\" ry=\"10.5\"/></clipPath><ellipse cx=\"119\" cy=\"31\" rx=\"7.5\" ry=\"10.5\" fill=\"#4aa8d8\"/><g clip-path=\"url(#e119)\" stroke=\"#f1f5f9\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M111.5 26q7.5 5 15.0 0M111.5 34q7.5 5 15.0 0\"/><path d=\"M112.0 30l1.5 -2l1.5 2\" /><path d=\"M115.5 30l1.5 -2l1.5 2\" /><path d=\"M119.0 30l1.5 -2l1.5 2\" /><path d=\"M122.5 30l1.5 -2l1.5 2\" /><path d=\"M126.0 30l1.5 -2l1.5 2\" /></g></svg>", "hat": "<svg viewBox=\"0 0 32 26\"><path d=\"M3 21C6 9 13 2 23 3c4 0 6 3 6 7-3-3-7-3-9 0-3 4-4 8-4 11z\" fill=\"#d9434f\"/><rect x=\"1\" y=\"19\" width=\"19\" height=\"6\" rx=\"3\" fill=\"#f1f5f9\"/><circle cx=\"28\" cy=\"12\" r=\"3.6\" fill=\"#f1f5f9\"/></svg>"};
+const OCCASIONS = {
+  mikolajki: { name: 'Mikołajki', when: '6 grudnia', greet: () => 'Wesołych Mikołajek!', snow: true, hat: true },
+  swieta:    { name: 'Boże Narodzenie', when: '20–30 grudnia', greet: () => 'Wesołych Świąt!', snow: true },
+  nowyrok:   { name: 'Nowy Rok', when: '31 grudnia – 2 stycznia', greet: () => 'Szczęśliwego Nowego Roku!' },
+  rocznica:  { name: '14 lutego', when: '14 lutego', greet: d => (d.getFullYear() - 1991) + ' lat Prawa o notariacie',
+               title: 'Prawo o notariacie uchwalono 14 lutego 1991 r. Przy okazji: wszystkiego dobrego w walentynki!' },
+  wielkanoc: { name: 'Wielkanoc', when: 'od Wielkiego Piątku do Poniedziałku Wielkanocnego', greet: () => 'Wesołego Alleluja!' }
+};
+function easterSunday(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(y, month - 1, day);
+}
+function occasionFor(dt) {
+  const m = dt.getMonth() + 1, d = dt.getDate(), y = dt.getFullYear();
+  if (m === 12 && d === 6) return 'mikolajki';
+  if (m === 12 && d >= 20 && d <= 30) return 'swieta';
+  if ((m === 12 && d === 31) || (m === 1 && d <= 2)) return 'nowyrok';
+  if (m === 2 && d === 14) return 'rocznica';
+  const diff = Math.round((new Date(y, m - 1, d) - easterSunday(y)) / 86400000);
+  if (diff >= -2 && diff <= 1) return 'wielkanoc';
+  return null;
+}
+let festivePreview = null;
+function applyFestive() {
+  const box = $('festive'), sub = $('subtitle'), logo = $('logo');
+  const now = new Date();
+  const key = festivePreview || (settings.festive ? occasionFor(now) : null);
+  const old = logo.querySelector('.hat');
+  if (old) old.remove();
+  box.textContent = '';
+  if (!key) {
+    box.hidden = true;
+    sub.textContent = 'Cyfrowy Asystent Rejenta'; sub.classList.remove('greet'); sub.removeAttribute('title');
+    return;
+  }
+  const oc = OCCASIONS[key];
+  box.hidden = false;
+  const art = document.createElement('div');
+  art.className = 'art'; art.innerHTML = FESTIVE_ART[key];
+  box.appendChild(art);
+  if (oc.snow) {
+    for (let i = 0; i < 16; i++) {
+      const fl = document.createElement('span');
+      const size = 2 + Math.random() * 2.5;
+      fl.className = 'flake';
+      fl.style.cssText = `left:${Math.random() * 100}%;width:${size}px;height:${size}px;` +
+        `animation-duration:${5 + Math.random() * 6}s;animation-delay:${-Math.random() * 10}s;` +
+        `--drift:${(Math.random() * 30 - 15).toFixed(0)}px;bottom:${Math.random() * 90}%`;
+      box.appendChild(fl);
+    }
+  }
+  if (oc.hat) {
+    const hat = document.createElement('span');
+    hat.className = 'hat'; hat.setAttribute('aria-hidden', 'true'); hat.innerHTML = FESTIVE_ART.hat;
+    logo.appendChild(hat);
+  }
+  sub.textContent = oc.greet(now); sub.classList.add('greet');
+  if (oc.title) sub.title = oc.title; else sub.removeAttribute('title');
+}
+function initFestive() {
+  const seg = $('festive-seg'), prev = $('festive-prev');
+  const refresh = () => {
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.fest === 'on') === settings.festive)));
+    prev.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.prev === festivePreview)));
+    applyFestive();
+  };
+  seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    settings.festive = b.dataset.fest === 'on'; saveSettings(); refresh();
+  }));
+  Object.entries(OCCASIONS).forEach(([key, oc]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.dataset.prev = key; b.textContent = oc.name; b.title = oc.when;
+    b.addEventListener('click', () => { festivePreview = festivePreview === key ? null : key; refresh(); window.scrollTo(0, 0); });
+    prev.appendChild(b);
+  });
+  $('festive-dates').textContent = 'Pojawiają się same: ' +
+    Object.values(OCCASIONS).map(o => `${o.name} (${o.when})`).join(', ') + '.';
+  refresh();
 }
 
 // ---------- Wygląd ----------
@@ -1233,12 +1353,12 @@ function init() {
   window.addEventListener('resize', navFade);
   navFade();
   // wartości startowe
-  $('date').value = todayISO();
   $('copies').value = settings.defCopies;
   $('pages').value = settings.defPages;
-  $('court').value = settings.defCourt;
+  $('court').value = String(settings.defCourt).replace('.', ',');
   $('clear-other').addEventListener('click', () => { otherSel.clear(); renderOther(); updateOther(); });
-  ['date', 'v1', 'm1', 'd1', 'v2', 'm2', 'd2', 'copies', 'pages', 'court'].forEach(id => $(id).addEventListener('input', updateTaksa));
+  ['v1', 'd1', 'v2', 'd2', 'court'].forEach(id => moneyField($(id)));
+  ['v1', 'm1', 'd1', 'v2', 'm2', 'd2', 'copies', 'pages', 'court'].forEach(id => $(id).addEventListener('input', updateTaksa));
   Object.values(toggles).forEach(el => el.addEventListener('click', () => {
     el.setAttribute('aria-pressed', String(!isOn(el)));
     updateTaksa();
@@ -1249,6 +1369,7 @@ function init() {
 
   initSettings();
   initAppearance();
+  initFestive();
   renderDocs();
   renderOther();
   updateTaksa();
